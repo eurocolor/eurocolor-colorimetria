@@ -207,7 +207,7 @@ canvas{display:block;touch-action:none;cursor:crosshair;width:100%;height:180px}
 </div>
 
 <script>
-var SHEET_URL='https://script.google.com/macros/s/AKfycbxVIr97IsweYKmGuiYYFGtyt3BuRxs2gLULVABVOoxp6VRouT0RiQTw-Jzlp4GKLCgXqg/exec';
+var SHEET_URL='https://script.google.com/macros/s/AKfycbwXHnN1SqVs2vBPxy6nMY5SlHwI5Clcx1u0v9tU0hgdOjeEAHXUB_TLxlJbtFnkwvBbCg/exec';
 
 // Generar ID único
 function genId(){
@@ -334,26 +334,24 @@ document.getElementById('submit-btn').addEventListener('click',function(){
   updateProgress(40,'Procesando firma...');
   var firmaB64=canvas.toDataURL('image/png').split(',')[1];
   updateProgress(60,'Enviando reporte...');
-  Promise.resolve().then(function(){
-      var payload={
-        reportId:    reportId,
-        fecha:       g('f_fecha'),
-        tintero:     g('f_tintero'),
-        cliente:     g('f_cliente'),
-        codigoColor: g('f_codigo'),
-        marca:       g('f_marca'),
-        modelo:      g('f_modelo'),
-        anio:        g('f_anio'),
-        repintado:   repintado.dataset.val,
-        motivo:      g('f_motivo'),
-        firma:       firmaB64
-      };
+  var payload={
+    reportId:    reportId,
+    fecha:       g('f_fecha'),
+    tintero:     g('f_tintero'),
+    cliente:     g('f_cliente'),
+    codigoColor: g('f_codigo'),
+    marca:       g('f_marca'),
+    modelo:      g('f_modelo'),
+    anio:        g('f_anio'),
+    repintado:   repintado.dataset.val,
+    motivo:      g('f_motivo'),
+    firma:       firmaB64
+  };
 
-      return fetch(SHEET_URL,{method:'POST',body:JSON.stringify(payload),mode:'no-cors'});
-    })
-    .then(function(){
-      // no-cors no retorna JSON, asumimos éxito
-      if(true){
+  fetch(SHEET_URL,{method:'POST',body:JSON.stringify(payload)})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.status==='ok'){
         currentReportId=reportId;
         updateProgress(100,'Listo');
         setTimeout(function(){
@@ -364,13 +362,11 @@ document.getElementById('submit-btn').addEventListener('click',function(){
       } else throw new Error();
     })
     .catch(function(){
-      currentReportId=reportId;
-      updateProgress(100,'Listo');
-      setTimeout(function(){
-        document.getElementById('fc').style.display='none';
-        document.getElementById('ok-msg').style.display='block';
-        document.getElementById('ok-id').textContent=reportId;
-      },500);
+      document.getElementById('err-msg').style.display='block';
+      document.getElementById('progress-wrap').style.display='none';
+      btn.disabled=false;
+      document.getElementById('spinner').style.display='none';
+      document.getElementById('btn-text').textContent='Enviar reporte';
     });
 });
 
